@@ -1,3 +1,5 @@
-echo test 1
-echo test 2
-echo test 3
+echo command 1
+timeout /t 3 /nobreak >nul
+echo command 2
+timeout /t 3 /nobreak >nul
+echo command 3
