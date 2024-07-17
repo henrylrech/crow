@@ -41,12 +41,10 @@ pub fn run(script: &str) {
 
     let title = format!("crow {}", script);
 
-        // Build the command arguments
     let mut command_args_vec = vec![
         "wt", "-w", "0", "nt", "--title", &title, "--suppressApplicationTitle", "cmd", "/k", &command_str,
     ];
 
-    // Add the -d option if path exists
     if let Some(ref path) = path {
         command_args_vec.insert(7, "-d"); // Insert -d before the path
         command_args_vec.insert(8, path);
@@ -150,20 +148,25 @@ pub fn ls() -> io::Result<()> {
 }
 
 
-pub fn remove() {
-
-    if let Err(e) = ls() {
-        eprintln!("error listing files: {}", e);
-    }
+pub fn remove(script: Option<&str>) {
 
     let mut name = String::new();
 
-    print!("> what script would you like to remove? --> ");
-    io::stdout().flush().expect("failed to flush stdout");
-
-    io::stdin()
-        .read_line(&mut name)
-        .expect("failed to read line");
+    match script {
+        Some(scr) => name = scr.to_string(),
+        None => {
+            if let Err(e) = ls() {
+                eprintln!("error listing files: {}", e);
+            }
+        
+            print!("> what script would you like to remove? --> ");
+            io::stdout().flush().expect("failed to flush stdout");
+        
+            io::stdin()
+                .read_line(&mut name)
+                .expect("failed to read line");
+        }
+    }
 
     let filename = name.trim().to_owned() + ".txt"; 
     let path = Path::new(&filename);
@@ -185,7 +188,7 @@ usage:
 crow <scriptname> -> runs a script
 crow add -> adds a new script
 crow ls -> lists all scripts
-crow remove -> remove a script
+crow remove <scriptname> -> remove a script
 crow help -> current page
 ");
 }
