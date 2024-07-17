@@ -7,13 +7,19 @@ fn main() {
     if args.len() == 2 && &args[1] == "add" {
         crow::add();
         return;
-    } else if args.len() == 2 && &args[1] == "ls" {
-        if let Err(e) = crow::ls() {
-            eprintln!("error: {}", e);
+    } else if args.len() >= 2 && &args[1] == "ls" {
+        let n = args.len();
+
+        match n {
+            2 => crow::ls(None).expect("error on ls command with no argument"),
+            3 => crow::ls(Some(&args[2])).expect("error on ls command with argument"),
+            _ => crow::help(),
         }
+
         return;
     } else if args.len() >= 2 && &args[1] == "remove" {
         let n = args.len();
+
         match n {
             2 => crow::remove(None),
             3 => crow::remove(Some(&args[2])),

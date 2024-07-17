@@ -121,28 +121,45 @@ pub fn add() {
     println!("script saved successfully (try running crow {})", name);
 }
 
-pub fn ls() -> io::Result<()> {
-    let path = ".";
+pub fn ls(script: Option<&str>) -> io::Result<()> {
 
-    let entries = fs::read_dir(path)?
-        .filter_map(|entry| entry.ok())
-        .filter(|entry| entry.path().extension().map(|ext| ext == "txt").unwrap_or(false))
-        .collect::<Vec<_>>();
+    match script {
+        Some(scr) => {
+            println!("> reading contents of {} script", scr);
 
-    if entries.is_empty() {
-        return Ok(());
-    }
+            match fs::read_to_string(format!("{}.txt", scr)) {
+                Ok(contents) => {
+                    println!("{}", contents);
+                }
+                Err(_e) => {
+                    eprintln!("error: no script found");
+                }
+            }
+        },
+        None => {     
+            let path = ".";
 
-    println!("> list of scripts");
+            let entries = fs::read_dir(path)?
+                .filter_map(|entry| entry.ok())
+                .filter(|entry| entry.path().extension().map(|ext| ext == "txt").unwrap_or(false))
+                .collect::<Vec<_>>();
 
-    for entry in entries {
-        let file_name = entry.file_name();
+            if entries.is_empty() {
+                return Ok(());
+            }
 
-        if let Some(name_str) = file_name.to_str() {
-            let name_without_extension = &name_str[..name_str.len() - 4];
-            println!("{}", name_without_extension);
+            println!("> list of scripts");
+
+            for entry in entries {
+                let file_name = entry.file_name();
+
+                if let Some(name_str) = file_name.to_str() {
+                    let name_without_extension = &name_str[..name_str.len() - 4];
+                    println!("{}", name_without_extension);
+                }
+            }
         }
-    }
+    };
 
     Ok(())
 }
@@ -155,7 +172,7 @@ pub fn remove(script: Option<&str>) {
     match script {
         Some(scr) => name = scr.to_string(),
         None => {
-            if let Err(e) = ls() {
+            if let Err(e) = ls(None) {
                 eprintln!("error listing files: {}", e);
             }
         
@@ -187,8 +204,8 @@ pub fn help() {
 usage: 
 crow <scriptname> -> runs a script
 crow add -> adds a new script
-crow ls -> lists all scripts
-crow remove <scriptname> -> remove a script
+crow ls <scriptname> -> lists all scripts or the contents of a script
+crow remove <scriptname> -> removes a script
 crow help -> current page
 ");
 }
