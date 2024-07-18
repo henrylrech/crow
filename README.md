@@ -10,7 +10,7 @@ cargo install --git https://github.com/henrylrech/crow.git
 ```
 ### 3 - try it out!
 ```
-crow test
+crow help
 ```
 
 ## warning
