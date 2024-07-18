@@ -32,10 +32,8 @@ fn main() {
         return;
     } 
 
-    let joined_args = args[1..].join(" ");
+    let script_name = args[1..].join(" ");
 
-    println!("{}", &joined_args);
-
-    crow::run(&joined_args)
+    crow::run(&script_name)
 }
 

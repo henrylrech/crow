@@ -1,6 +1,6 @@
 use std::fs::{self, File};
 use std::io::{self, BufRead, Write};
-use std::path::{PathBuf};
+use std::path::PathBuf;
 use std::process::Command;
 
 pub fn run(script: &str) {
