@@ -1,11 +1,16 @@
 use std::fs::{self, File};
 use std::io::{self, BufRead, Write};
-use std::path::Path;
+use std::path::{PathBuf};
 use std::process::Command;
 
 pub fn run(script: &str) {
     let filename = script.to_owned() + ".txt";
-    let path = Path::new(&filename);
+
+    let appdata_dir = dirs::data_local_dir().expect("could not find the AppData directory");
+
+    let mut path = PathBuf::from(appdata_dir);
+    path.push(".crow");
+    path.push(filename);
 
     let file = match File::open(path) {
         Ok(file) => file,
@@ -113,7 +118,17 @@ pub fn add() {
 
     let script_content = script_lines.join("\n");
 
-    let mut file = File::create(name.to_owned() + ".txt").expect("failed to create file");
+    let appdata_dir = dirs::data_local_dir().expect("could not find the AppData directory");
+
+    let mut file_path = PathBuf::from(appdata_dir);
+    file_path.push(".crow");
+    file_path.push(name.to_owned() + ".txt");
+
+    if let Some(parent) = file_path.parent() {
+        std::fs::create_dir_all(parent).expect("could not create .crow directory");
+    }
+
+    let mut file = File::create(file_path).expect("failed to create file");
 
     // Write the content to the file
     file.write_all(script_content.as_bytes()).expect("failed to write to file");
@@ -127,7 +142,13 @@ pub fn ls(script: Option<&str>) -> io::Result<()> {
         Some(scr) => {
             println!("> reading contents of {} script", scr);
 
-            match fs::read_to_string(format!("{}.txt", scr)) {
+            let appdata_dir = dirs::data_local_dir().expect("could not find the AppData directory");
+
+            let mut path = PathBuf::from(appdata_dir);
+            path.push(".crow");
+            path.push(scr.to_owned() + ".txt");
+
+            match fs::read_to_string(path) {
                 Ok(contents) => {
                     println!("{}", contents);
                 }
@@ -137,7 +158,11 @@ pub fn ls(script: Option<&str>) -> io::Result<()> {
             }
         },
         None => {     
-            let path = ".";
+
+            let appdata_dir = dirs::data_local_dir().expect("could not find the AppData directory");
+
+            let mut path = PathBuf::from(appdata_dir);
+            path.push(".crow");
 
             let entries = fs::read_dir(path)?
                 .filter_map(|entry| entry.ok())
@@ -186,7 +211,14 @@ pub fn remove(script: Option<&str>) {
     }
 
     let filename = name.trim().to_owned() + ".txt"; 
-    let path = Path::new(&filename);
+
+    let appdata_dir = dirs::data_local_dir().expect("could not find the AppData directory");
+
+    let mut path = PathBuf::from(appdata_dir);
+    path.push(".crow");
+    path.push(filename);
+
+    //let check_path = Path::new(&path);
 
     if !path.exists() {
         eprintln!("error: no script found");
