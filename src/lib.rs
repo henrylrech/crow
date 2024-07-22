@@ -2,6 +2,7 @@ use std::fs::{self, File};
 use std::io::{self, BufRead, Write};
 use std::path::PathBuf;
 use std::process::Command;
+use colored::*;
 
 pub fn run(script: &str) {
     let filename = script.to_owned() + ".txt";
@@ -14,8 +15,8 @@ pub fn run(script: &str) {
 
     let file = match File::open(path) {
         Ok(file) => file,
-        Err(_) => {
-            eprintln!("error: no script found");
+        Err(e) => {
+            eprintln!("{} {}", "error: no script found".red(), e);
             return;
         }
     };
@@ -37,7 +38,7 @@ pub fn run(script: &str) {
                 }
             }
             Err(e) => {
-                eprintln!("Failed to read line: {}", e);
+                eprintln!("{} {}", "error: failed to read line".red(), e);
             }
         }
     }
@@ -59,6 +60,8 @@ pub fn run(script: &str) {
     .args(command_args_vec)
     .spawn()
     .unwrap();
+
+    println!("{}", format!("executing crow {}", script).black());
 }
 
 pub fn add() {
@@ -66,24 +69,24 @@ pub fn add() {
     let mut script_lines: Vec<String> = Vec::new();
 
     print!("> script name --> ");
-    io::stdout().flush().expect("failed to flush stdout");
+    io::stdout().flush().expect(&"error: failed to flush stdout".red().to_string());
 
     let mut name = String::new();
 
     io::stdin()
         .read_line(&mut name)
-        .expect("failed to read line");
+        .expect(&"error: failed to read line".red().to_string());
 
     let name = name.trim();
 
     let mut path = String::new();
 
     print!("> path where script will execute --> ");
-    io::stdout().flush().expect("failed to flush stdout");
+    io::stdout().flush().expect(&"error: failed to flush stdout".red().to_string());
 
     io::stdin()
     .read_line(&mut path)
-    .expect("failed to read line");
+    .expect(&"error: failed to read line".red().to_string());
 
     let path = path.trim().to_string();
 
@@ -103,7 +106,7 @@ pub fn add() {
 
         io::stdin()
             .read_line(&mut command)
-            .expect("failed to read line");
+            .expect(&"error: failed to read line".red().to_string());
 
         // Trim the trailing newline character
         let command = command.trim().to_string();
@@ -118,20 +121,20 @@ pub fn add() {
 
     let script_content = script_lines.join("\n");
 
-    let appdata_dir = dirs::data_local_dir().expect("could not find the AppData directory");
+    let appdata_dir = dirs::data_local_dir().expect(&"error: could not find the AppData directory".red().to_string());
 
     let mut file_path = PathBuf::from(appdata_dir);
     file_path.push(".crow");
     file_path.push(name.to_owned() + ".txt");
 
     if let Some(parent) = file_path.parent() {
-        std::fs::create_dir_all(parent).expect("could not create .crow directory");
+        std::fs::create_dir_all(parent).expect(&"error: could not create .crow directory".red().to_string());
     }
 
-    let mut file = File::create(file_path).expect("failed to create file");
+    let mut file = File::create(file_path).expect(&"error: failed to create file".red().to_string());
 
     // Write the content to the file
-    file.write_all(script_content.as_bytes()).expect("failed to write to file");
+    file.write_all(script_content.as_bytes()).expect(&"error: failed to write to file".red().to_string());
 
     println!("script saved successfully (try running crow {})", name);
 }
@@ -142,7 +145,7 @@ pub fn ls(script: Option<&str>) -> io::Result<()> {
         Some(scr) => {
             println!("> reading contents of {} script", scr);
 
-            let appdata_dir = dirs::data_local_dir().expect("could not find the AppData directory");
+            let appdata_dir = dirs::data_local_dir().expect(&"error: could not find the AppData directory".red().to_string());
 
             let mut path = PathBuf::from(appdata_dir);
             path.push(".crow");
@@ -153,7 +156,7 @@ pub fn ls(script: Option<&str>) -> io::Result<()> {
                     println!("{}", contents);
                 }
                 Err(_e) => {
-                    eprintln!("error: no script found");
+                    eprintln!("{}", "error: no script found".red());
                 }
             }
         },
@@ -198,36 +201,34 @@ pub fn remove(script: Option<&str>) {
         Some(scr) => name = scr.to_string(),
         None => {
             if let Err(e) = ls(None) {
-                eprintln!("error listing files: {}", e);
+                eprintln!("{} {}", "error: listing files".red(), e);
             }
         
             print!("> what script would you like to remove? --> ");
-            io::stdout().flush().expect("failed to flush stdout");
+            io::stdout().flush().expect(&"failed to flush stdout".red().to_string());
         
             io::stdin()
                 .read_line(&mut name)
-                .expect("failed to read line");
+                .expect(&"error: failed to read line".red().to_string());
         }
     }
 
     let filename = name.trim().to_owned() + ".txt"; 
 
-    let appdata_dir = dirs::data_local_dir().expect("could not find the AppData directory");
+    let appdata_dir = dirs::data_local_dir().expect(&"error: could not find the AppData directory".red().to_string());
 
     let mut path = PathBuf::from(appdata_dir);
     path.push(".crow");
     path.push(filename);
 
-    //let check_path = Path::new(&path);
-
     if !path.exists() {
-        eprintln!("error: no script found");
+        eprintln!("{}", "error: no script found".red());
         return;
     }
 
     match fs::remove_file(&path) {
         Ok(_) => println!("> removed successfully"),
-        Err(e) => eprintln!("error deleting file: {}", e),
+        Err(e) => { eprintln!("{} {}", "error: deleting file".red(), e); }
     }
 }
 
